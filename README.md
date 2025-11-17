@@ -9,19 +9,15 @@ Además, se validan los métodos usando EDOs con solución analítica y se gener
 ## 📂 Estructura del repositorio
 
 ProyectoFinalED/
-│
-├── src/
-│ ├── integrator.py # Implementación de RK4, AB2 y Euler
-│ ├── problems.py # EDOs: exponencial, logística, armónico, depredador–presa
-│ ├── experiments.py # Pruebas de convergencia y simulaciones finales
-│ ├── utils.py # Funciones auxiliares (errores, tablas, guardado de figuras)
-│ └── init.py
-│
-├── figures/ # Gráficas generadas automáticamente
-│
-├── report/ # Informe en LaTeX (opcional)
-│
-└── README.md
+- src/
+  - integrator.py # Implementación de RK4, AB2 y Euler
+  - problems.py # EDOs: exponencial, logística, armónico, depredador–presa
+  - experiments.py # Pruebas de convergencia y simulaciones finales
+  - utils.py # Funciones auxiliares (errores, tablas, guardado de figuras)
+    
+- figures/ # Gráficas generadas automáticamente
+- report/ # Informe en LaTeX
+- README.md
 
 ---
 
