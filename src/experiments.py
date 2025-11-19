@@ -10,8 +10,8 @@ Este módulo contiene las funciones principales para ejecutar:
 import numpy as np
 import matplotlib.pyplot as plt
 from .integrator import solve
-from .problems import expo_problem, logistic_problem, harmonic_oscillator, rotation_system, rosenzweig_macarthur
-from .utils import l2_error, linf_error, save_figure, print_table
+from .problems import expo_problem, logistic_problem, harmonic_oscillator, rosenzweig_macarthur
+from .utils import l2_error, save_figure, print_table
 from .scenarios import get_all_scenarios
 import os
 
@@ -35,31 +35,74 @@ def run_validation_tests():
     # --- Prueba 1: ED 1er Orden (Exponencial) ---
     print("Convergence - Exponential")
     f, y0, analytic = expo_problem()
-    rows = convergence_test(f, y0, analytic, methods, hs, T)
+    rows, errors_dict = convergence_test(f, y0, analytic, methods, hs, T)
     print_table(["method", "h", "L2_error"], rows)
+    plot_solution(f, y0, analytic, methods, h=0.1, T=T, name_prefix="convergence_exponential")
+    plot_convergence(errors_dict, "convergence_exponential")
     print("\n")
     
     # --- Prueba 2: ED 1er Orden (Logística) ---
     print("Convergence - Logistic")
     f, y0, analytic = logistic_problem()
-    rows = convergence_test(f, y0, analytic, methods, hs, T)
+    rows, errors_dict = convergence_test(f, y0, analytic, methods, hs, T)
     print_table(["method", "h", "L2_error"], rows)
+    plot_solution(f, y0, analytic, methods, h=0.1, T=T, name_prefix="convergence_logistic")
+    plot_convergence(errors_dict, "convergence_logistic")
+    print("\n")
+    
+    # --- Prueba 3: Oscilador Armónico (comparación de métodos) ---
+    print("Harmonic Oscillator - Method Comparison")
+    f, y0, analytic = harmonic_oscillator()
+    # Para esta gráfica, usamos todos los métodos incluyendo Euler
+    plot_solution_comparison(f, y0, methods=['rk4', 'ab2', 'euler'], h=0.01, T=20.0, name_prefix="harmonic")
     print("\n")
 
 
 def convergence_test(f, y0, analytic, methods, hs, T):
     """
     Función auxiliar para calcular errores de convergencia.
+    
+    Returns:
+        rows: Lista de [method, h, error] para la tabla
+        errors_dict: Diccionario con errores por método para gráficas
     """
     rows = []
+    errors_dict = {}
     for method in methods:
+        errors = []
         for h in hs:
             t, y = solve(f, y0, (0.0, T), h, method=method)
             yT_num = y[-1]
             yT_true = analytic(T)
             e = l2_error(yT_num, yT_true)
             rows.append([method, h, f"{e:.2e}"])
-    return rows
+            errors.append((h, float(e)))
+        errors_dict[method] = errors
+    return rows, errors_dict
+
+def plot_convergence(errors_dict, name_prefix):
+    """
+    Genera gráfica de error vs tamaño de paso (h) para visualizar la convergencia.
+    
+    Args:
+        errors_dict: Diccionario con errores por método {method: [(h, error), ...]}
+        name_prefix: Prefijo para el nombre del archivo
+    """
+    plt.figure(figsize=(10, 6))
+    
+    for method, errors in errors_dict.items():
+        hs = [h for h, _ in errors]
+        errs = [e for _, e in errors]
+        plt.loglog(hs, errs, 'o-', label=f'{method}', linewidth=2, markersize=8)
+    
+    plt.xlabel("Tamaño de paso (h)", fontsize=12)
+    plt.ylabel("Error L2", fontsize=12)
+    plt.title(f"Convergencia: Error vs Tamaño de Paso - {name_prefix}", fontsize=13, fontweight='bold')
+    plt.legend(fontsize=11)
+    plt.grid(True, linestyle='--', alpha=0.6, which='both')
+    save_figure(plt.gcf(), f"{name_prefix}_convergence.png")
+    plt.close()
+
 
 def plot_solution(f, y0, analytic, methods, h, T, name_prefix):
     """
@@ -70,6 +113,10 @@ def plot_solution(f, y0, analytic, methods, h, T, name_prefix):
     # Graficar solución analítica de referencia
     t_ref = np.linspace(0, T, 200)
     y_ref = np.array([analytic(t) for t in t_ref])
+    
+    # Asegurar que y_ref sea 2D
+    if y_ref.ndim == 1:
+        y_ref = y_ref.reshape(-1, 1)
     
     if y_ref.shape[1] == 1: # ED 1D
         plt.plot(t_ref, y_ref[:, 0], 'k--', label='Analítica', linewidth=2)
@@ -92,6 +139,31 @@ def plot_solution(f, y0, analytic, methods, h, T, name_prefix):
     plt.title(f"Validación de Métodos: {name_prefix}")
     plt.grid(True, linestyle='--', alpha=0.6)
     save_figure(plt.gcf(), f"{name_prefix}_solucion.png")
+    plt.close()
+
+
+def plot_solution_comparison(f, y0, methods=['rk4','ab2','euler'], h=0.01, T=20.0, name_prefix="sol"):
+    """
+    Genera gráfica de comparación de métodos numéricos (como la original del oscilador armónico).
+    Muestra las componentes x e y de cada método sin solución analítica de referencia.
+    """
+    plt.figure(figsize=(10, 6))
+    
+    # Graficar soluciones numéricas para cada método
+    for method in methods:
+        t, y = solve(f, y0, (0.0, T), h, method=method)
+        if y.shape[1] == 1:
+            plt.plot(t, y[:, 0], label=method, linewidth=1.5)
+        else:
+            plt.plot(t, y[:, 0], label=f"{method} x", linewidth=1.5)
+            plt.plot(t, y[:, 1], label=f"{method} y", linewidth=1.5, alpha=0.8)
+    
+    plt.legend(fontsize=10)
+    plt.xlabel("t", fontsize=11)
+    plt.ylabel("solution", fontsize=11)
+    plt.title("Solution comparison", fontsize=12, fontweight='bold')
+    plt.grid(True, linestyle='--', alpha=0.6)
+    save_figure(plt.gcf(), f"{name_prefix}.png")
     plt.close()
 
 
