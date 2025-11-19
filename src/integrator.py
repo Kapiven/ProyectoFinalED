@@ -1,14 +1,32 @@
+"""
+Módulo integrador para resolver ecuaciones diferenciales ordinarias (EDOs).
+
+Este módulo implementa el solucionador principal que utiliza los métodos numéricos
+definidos en methods.py (Euler, Runge-Kutta 4, Adams-Bashforth 2) para resolver
+sistemas de ecuaciones diferenciales ordinarias.
+"""
+
 import numpy as np
 from .methods import euler_step, rk4_step, ab2_step
 
 def solve(f, y0, t_span, h, method='rk4'):
     """
-    f: function f(t, y) -> array_like
-    y0: ndarray initial state
-    t_span: (t0, tf)
-    h: step size
-    method: 'euler', 'rk4', 'ab2'
-    returns: t_vals (N+1,), y_vals (N+1, dim)
+    Resuelve una ecuación diferencial ordinaria (EDO) o sistema de EDOs.
+    
+    Args:
+        f: Función que define la EDO, f(t, y) -> array_like
+           Representa dy/dt = f(t, y)
+        y0: Estado inicial, ndarray de dimensión (dim,)
+        t_span: Tupla (t0, tf) con el tiempo inicial y final
+        h: Tamaño del paso de tiempo
+        method: Método numérico a usar ('euler', 'rk4', 'ab2')
+    
+    Returns:
+        t_vals: Array de tiempos (N+1,)
+        y_vals: Array de soluciones (N+1, dim)
+    
+    Raises:
+        ValueError: Si el método especificado no es reconocido
     """
     t0, tf = t_span
     t_vals = np.arange(t0, tf + 1e-12, h)

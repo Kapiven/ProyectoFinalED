@@ -1,3 +1,12 @@
+"""
+Módulo de experimentos y simulaciones del proyecto.
+
+Este módulo contiene las funciones principales para ejecutar:
+1. Pruebas de validación y convergencia de métodos numéricos
+2. Análisis de escenarios del modelo depredador-presa Rosenzweig-MacArthur
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from .integrator import solve
